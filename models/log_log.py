@@ -1,16 +1,18 @@
 
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 from tools.engine import base_engine
 from tools.simulator import simulate
 
-class naive_model:
+class log_log_model:
 
     def __init__(self):
         data = pd.read_csv("data/formated_data.csv")
-        data = data.groupby("Price").Sales.mean()
-        self.data = np.round(data,0)
+        data.drop(columns = ["item"], inplace = True)
+        data = data.apply(np.log)
+        self.model = LinearRegression().fit(data.drop(columns = "Sales"), data.Sales)
 
     def execute(self, inventory, weeks, prices):
         best_execution = {"revenue": 0}
@@ -23,4 +25,9 @@ class naive_model:
         return best_execution
 
     def predict(self, engine):
-        return self.data[engine.price()]
+        aux = pd.DataFrame({
+            "Week" : engine.total_weeks - engine.remaining_weeks,
+            "Qty" : engine.inventory(),
+            "Price" : engine.price()
+        }, index = {0})
+        return np.power(self.model.predict(aux),2)
