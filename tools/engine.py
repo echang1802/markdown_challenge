@@ -11,7 +11,7 @@ class engine(base_engine):
             self.__model__ = naive_model()
         if model == "log_log":
             from models.log_log import log_log_model
-            self.__model__ = log_log_model()
+            self.__model__ = log_log_model(total_weeks)
 
     def predict(self):
         return self.__model__.execute(self._inventory, self.remaining_weeks, self._price.get_list())

@@ -8,11 +8,12 @@ from tools.simulator import simulate
 
 class log_log_model:
 
-    def __init__(self):
+    def __init__(self, weeks):
         data = pd.read_csv("data/formated_data.csv")
         data.drop(columns = ["item"], inplace = True)
         data = data.apply(np.log)
         self.model = LinearRegression().fit(data.drop(columns = "Sales"), data.Sales)
+        self.__weeks__ = weeks
 
     def execute(self, inventory, weeks, prices):
         best_execution = {"revenue": 0}
@@ -25,9 +26,11 @@ class log_log_model:
         return best_execution
 
     def predict(self, engine):
+        if engine.inventory() == 0:
+            return 0
         aux = pd.DataFrame({
-            "Week" : engine.total_weeks - engine.remaining_weeks,
-            "Qty" : engine.inventory(),
-            "Price" : engine.price()
+            "Week" : np.log(self.__weeks__ - engine.remaining_weeks),
+            "Qty" : np.log(engine.inventory()),
+            "Price" : np.log(engine.price())
         }, index = {0})
-        return np.power(self.model.predict(aux),2)
+        return np.exp(self.model.predict(aux))
